@@ -5,11 +5,14 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 import io.restassured.RestAssured;
+import io.restassured.filter.cookie.CookieFilter;
 import io.restassured.http.Header;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.apache.commons.configuration.ConfigurationException;
+import org.hamcrest.MatcherAssert;
 import org.json.JSONObject;
+import org.junit.Assert;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -75,12 +78,11 @@ public class CandidateStepDefinition {
 
     @Then("Cookies will be generated")
     public void cookies_will_be_generated() throws ConfigurationException, IOException {
-        int statusCodeCookie = response.getStatusCode();
-        System.out.println(statusCodeCookie);
-        System.out.print(response.asString());
-        String cookies= response.jsonPath().getString("cookies");
-        System.out.println(cookies);
-        Utils.setEnvVariable(cookies);
+        CookieFilter filter = new CookieFilter();
+        String url = "/opensource-demo.orangehrmlive.com/web/index.php/auth/login";
+        String body = "userName=Admin&&password=admin123";
+        Response response = RestAssured.given().filter(filter).body(body).post(url).andReturn();
+        RestAssured.given().filter(filter).body(body).post(url);
     }
 
     @Given("Cookies API is provided")
@@ -101,7 +103,8 @@ public class CandidateStepDefinition {
     public void the_candidate_info_will_be_added() {
         System.out.println("Response Body is =>  " + response.asString());
         String candidate=response.jsonPath().getString("id");
-      //  Assert.assertEquals(candidate,"101");
+        Assert.assertEquals(statusCode, 200 ,"Correct status code returned");
+        MatcherAssert.assertThat("Validate json schema" , response.getBody().asString);
     }
 
     @Given("Cookies API2 is provided")
